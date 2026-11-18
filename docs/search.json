@@ -1,0 +1,79 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Count Regression: Workflow",
+    "section": "",
+    "text": "Our reference variable for the health category is Average and Male for the gender category.\n\n\n     n     mean      var    p_zero max\n1 4406 5.774399 45.68712 0.1550159  89\n\n\n\n\n\n\n\n\n\n\n\nUpon initially analyzing the data, it can be observed that it is count data; all values are whole numbers being 0 or higher, and it presents a positive, right skew. The variance is 45.69) is about 7.91 times the mean (5.77. This data is very overdispersed and there’s more spread than Poisson would assume, as Poisson assumes the variance is equal to the mean. In order to understand the count, we can see that 16% have never visited the doctor. We would need to see if the model truly has this amount of zeros."
+  },
+  {
+    "objectID": "index.html#looking-at-variables",
+    "href": "index.html#looking-at-variables",
+    "title": "Count Regression: Workflow",
+    "section": "",
+    "text": "Our reference variable for the health category is Average and Male for the gender category.\n\n\n     n     mean      var    p_zero max\n1 4406 5.774399 45.68712 0.1550159  89\n\n\n\n\n\n\n\n\n\n\n\nUpon initially analyzing the data, it can be observed that it is count data; all values are whole numbers being 0 or higher, and it presents a positive, right skew. The variance is 45.69) is about 7.91 times the mean (5.77. This data is very overdispersed and there’s more spread than Poisson would assume, as Poisson assumes the variance is equal to the mean. In order to understand the count, we can see that 16% have never visited the doctor. We would need to see if the model truly has this amount of zeros."
+  },
+  {
+    "objectID": "index.html#why-not-a-linear-model",
+    "href": "index.html#why-not-a-linear-model",
+    "title": "Count Regression: Workflow",
+    "section": "2.1 Why not a linear model?",
+    "text": "2.1 Why not a linear model?\n\n\n\n\n\n\n\n\n\nThe function, DHARMa approximates new, predicted data from the fitted models and determining where the observed data is. If it was fitting the Gaussian model well, there would be uniform residuals along the QQ plot, however the shape notes that there is a cluster of low values near 0 and a cluster of higher values near 1. This linear model is not accurate predictive or representative of our count data. Deeper issues also lie, as Gaussian models can have negative counts with no bounds, however doctors visits in our data can’t be less than 0. It assumes a constant variance, however the variance grows with the mean, and Poisson predicts it is the same. Finally, it treats the effects as additive, however it’s more typical to multiply the count."
+  },
+  {
+    "objectID": "index.html#specifying-nested-poisson-models",
+    "href": "index.html#specifying-nested-poisson-models",
+    "title": "Count Regression: Workflow",
+    "section": "2.2 Specifying Nested Poisson Models",
+    "text": "2.2 Specifying Nested Poisson Models\nWe are going to specify 3 nested models here. This means that there is an intercept model with only the outcome variable, and in each model, predictors are added.\n\n\n\n\n\n\n\n\nModel\nFormula\nResearch rationale\n\n\n\n\nnull: Null\nvisits ~ 1\nBaseline model\n\n\none_predictor: Chronic\nvisits ~ chronic\nEvaluate number of chronic conditions\n\n\nFull Poisson: Full\nvisits ~ chronic + health + gender + school + insurance\nThe remaining predictors being conditions, health status, gender, education, and insurance explain additional variation"
+  },
+  {
+    "objectID": "index.html#exploring-and-comparing-fitted-models",
+    "href": "index.html#exploring-and-comparing-fitted-models",
+    "title": "Count Regression: Workflow",
+    "section": "2.2 Exploring and Comparing Fitted Models",
+    "text": "2.2 Exploring and Comparing Fitted Models\nDue to our models being nested, we can compare them all using an anova.\n\n5.2 Model Performance\n\n\n2.3 Combining Nested Test & Model Performance\n\n\n2.4 Displaying the Combined Table\n\n\n\n\n\n\n\n\nModel\nAIC\nBIC\nLog-likelihood\nDeviance\nResidual.df\nNested df\nNested χ²\nNested p\n\n\n\n\nNull\n39,720.340\n39,726.731\n−19,859.170\n26,942.921\n4405\n—\n—\n—\n\n\nOne_Predictor: Chronic\n37,546.913\n37,559.694\n−18,771.456\n24,767.493\n4404\n1\n2,175.428\n&lt; .001\n\n\nFull\n36,596.989\n36,641.724\n−18,291.494\n23,807.569\n4399\n5\n959.924\n&lt; .001\n\n\n\n\n\n\n\n\n\n2.5 Interpreting the combined table\nThe provisionally selected model is Full, and the AIC value is 3.6596989^{4}, and the BIC value is 3.6641724^{4}."
+  },
+  {
+    "objectID": "index.html#simulating-residuals",
+    "href": "index.html#simulating-residuals",
+    "title": "Count Regression: Workflow",
+    "section": "3.1 Simulating Residuals",
+    "text": "3.1 Simulating Residuals"
+  },
+  {
+    "objectID": "index.html#testing-for-overdispersion-excess-zeros",
+    "href": "index.html#testing-for-overdispersion-excess-zeros",
+    "title": "Count Regression: Workflow",
+    "section": "3.2 Testing for Overdispersion & Excess Zeros",
+    "text": "3.2 Testing for Overdispersion & Excess Zeros\nThis test will assess whether the observed variance is larger or smaller than our Poisson model would expect, and if there are more zeros than expected.\n\n\n\n\n\n\n\n\n\n\n    DHARMa nonparametric dispersion test via sd of residuals fitted vs.\n    simulated\n\ndata:  simulationOutput\ndispersion = 7.2521, p-value &lt; 2.2e-16\nalternative hypothesis: two.sided\n\n\n\n\n\n\n\n\n\n\n\n\n    DHARMa zero-inflation test via comparison to expected zeros with\n    simulation under H0 = fitted model\n\ndata:  simulationOutput\nratioObsSim = 15.035, p-value &lt; 2.2e-16\nalternative hypothesis: two.sided"
+  },
+  {
+    "objectID": "index.html#interpreting-the-diagnostics",
+    "href": "index.html#interpreting-the-diagnostics",
+    "title": "Count Regression: Workflow",
+    "section": "3.3 Interpreting the Diagnostics",
+    "text": "3.3 Interpreting the Diagnostics\nThe DHARMa plots suggest that the fit of the Poisson model is less than ideal. It can be seen that in both graphs, the values on the far left being the simulated values from the model are vastly different from the red line, being the actual values.\nThe dispersion ratio the plot has displayed is 7.25 (p &lt; .001), and the expected rate of zero is 15.03 times the amount of zeros that the Poisson model expects, meaning that there is a greater variance in our data than the Poisson model can account for.\nThis overdispersion is important, as it carries the assumption that the variance is equal to the mean, so when this metric is incorrect, the other values that take into account the variance/mean, such as the standard errors, confidence intervals, and p-values, they are incorrect assumptions and will decrease each of these values. We cannot, however move straight to a zero-inflated model after these results, as zeros can be generated from two processes: structural (individuals never visiting the physician office), or sampling (count process, where it’s sometimes zero)."
+  },
+  {
+    "objectID": "index.html#estimate-the-nb2-model",
+    "href": "index.html#estimate-the-nb2-model",
+    "title": "Count Regression: Workflow",
+    "section": "4.1 Estimate the NB2 Model",
+    "text": "4.1 Estimate the NB2 Model\n\n\n Family: nbinom2  ( log )\nFormula:          visits ~ chronic + health + gender + school + insurance\nData: data\n\n      AIC       BIC    logLik -2*log(L)  df.resid \n  24469.9   24521.0  -12227.0   24453.9      4398 \n\n\nDispersion parameter for nbinom2 family (): 1.16 \n\nConditional model:\n                 Estimate Std. Error z value Pr(&gt;|z|)    \n(Intercept)      0.825180   0.058565  14.090  &lt; 2e-16 ***\nchronic          0.195759   0.012475  15.692  &lt; 2e-16 ***\nhealthpoor       0.367664   0.048204   7.627 2.40e-14 ***\nhealthexcellent -0.373645   0.061542  -6.071 1.27e-09 ***\ngenderfemale     0.115129   0.031658   3.637 0.000276 ***\nschool           0.027179   0.004402   6.174 6.67e-10 ***\ninsuranceyes     0.250155   0.040430   6.187 6.12e-10 ***\n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1"
+  },
+  {
+    "objectID": "index.html#compare-the-poisson-and-nb2",
+    "href": "index.html#compare-the-poisson-and-nb2",
+    "title": "Count Regression: Workflow",
+    "section": "4.2 Compare the Poisson and NB2",
+    "text": "4.2 Compare the Poisson and NB2\n\n\nData: data\nModels:\npoisson: visits ~ chronic + health + gender + school + insurance, zi=~0, disp=~1\nneg_binom: visits ~ chronic + health + gender + school + insurance, zi=~0, disp=~1\n          Df   AIC   BIC logLik deviance Chisq Chi Df Pr(&gt;Chisq)    \npoisson    7 36597 36642 -18292    36583                            \nneg_binom  8 24470 24521 -12227    24454 12129      1  &lt; 2.2e-16 ***\n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\n\nDOUBLE CHECK VALUES AFTER RENDERING! Using a Likelihood Ratio Test to compare the Poisson model versus the negative binomial model, the χ² was found to be (1) = 1.212908^{4}, p &lt; .001. These values show that the addition of another parameter (through the df value), as seen in the large Chisq value, showing that the model fits better the the added parameter. Additionally, both the AIC and BIC (Code values) were significantly lowered. Through these values, we can conclude that the NB2 model is a better fit. This added parameter was valuable in allowing the variance to exceed the mean, however these values cannot yet illustrate other problems such as extreme counts and excess zeros."
+  },
+  {
+    "objectID": "index.html#double-checking-nb2-with-dharma",
+    "href": "index.html#double-checking-nb2-with-dharma",
+    "title": "Count Regression: Workflow",
+    "section": "4.3 Double-Checking NB2 with DHARMa",
+    "text": "4.3 Double-Checking NB2 with DHARMa\n\n\n\n\n\n\n\n\n\nWe would like to perform additional tests regarding the dispersion, as it becomes close to zero it indicates non-significance. We would also like to observe whether the model has produced a number of zeros similar to the observed, determining whether a hurdle or zero-inflated model might be needed.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nThe negative binomial model has resolved overdispersion, as the ratio is now 1.04 (p = 0.432), and non-significant.\n\nVisualizing Predicted Counts\nCoefficients on the log scale are hard to picture, so it helps to plot what the model predicts on the count scale. Here we plot predicted article counts across mentor productivity, holding the other predictors at their reference levels (Men, Single) or means (kid5, phd).\n\n\n\n\n\n\n\n\n\nThis model has created a curved line upwards, despite the predictors being linear, due to the use of a log link, as each year of school added isn’t 1, but rather the log of it, multiplying the expected count.\nIn double checking these plots, the QQ plots should (and are) closer to the diagonal line, in which they are, showing the NB2 is adequate with residuals being closer to predicted. However, the DHARMa residual vs predicted illustrates that there is a curve rather than the expected flat, fitted line. This curvature looks to have a pattern, meaning that the residuals likely are not random (as they should be, which would create the ideal straight line); this illustrated systemic changes, which are not desirable in a model, and they do not match the horizontal, red quantile lines."
+  }
+]

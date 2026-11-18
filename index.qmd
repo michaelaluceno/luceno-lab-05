@@ -101,9 +101,7 @@ descriptive_plot <- ggplot(data, aes(x = visits)) +
 descriptive_plot
 
 ```
-Instructions: •	A paragraph considering whether the outcome is a count, how the variance compares to the mean, what proportion of people had no visits, and whether there are unusually large counts. Use inline R code for every number you report.
-
-Upon initially analyzing the data, it can be observed that it is count data; all values are whole numbers being 0 or higher, and it presents a positive, right skew. The variance is `r round(visit_summary$var, 2)`) is about `r round(visit_summary$var / visit_summary$mean, 2)` times the mean (`r round(visit_summary$mean, 2)`. This data is very overdispersed and there's more spread than Poisson would assume, as Poisson assumes the variance is equal to the mean. In order to understand the count, we can see that **`r round(100 * art_summary$p_zero)`%** have never visited the doctor. We would need to see if the model truly has this amount of zeros. 
+Upon initially analyzing the data, it can be observed that it is count data; all values are whole numbers being 0 or higher, and it presents a positive, right skew. The variance is `r round(visit_summary$var, 2)`) is about `r round(visit_summary$var / visit_summary$mean, 2)` times the mean (`r round(visit_summary$mean, 2)`. This data is very overdispersed and there's more spread than Poisson would assume, as Poisson assumes the variance is equal to the mean. In order to understand the count, we can see that **`r round(100 * visit_summary$p_zero)`%** have never visited the doctor. We would need to see if the model truly has this amount of zeros. 
 
 # 2. Specify Competing Models 
 ## 2.1 Why not a linear model? 
@@ -275,10 +273,6 @@ comparison_table |>
 
 ### 2.5 Interpreting the combined table
 
-The χ² value when looking between the null and a single predictor is `r round(model_comparison$Chisq[2], 2)`, with the df being `r model_comparison$"Chi Df"[2]` and the p-value is `r format.pval(model_comparison$"Pr(>Chisq)"[2], eps = .001)`. When comparing the one predictor model to the full model, the χ² is `r round(model_comparison$Chisq[3], 2)`, the df is `r model_comparison$"Chi Df"[3]`, and the p-value is
-`r format.pval(model_comparison$"Pr(>Chisq)"[3], eps = .001)`. 
-
-The χ² statistic is the likelihood ratio, where the deviance will decrease with complexity as there are more factors as they account for more. The df accounts for how many parameters are being added, with the total number of variables being one more than the degrees of freedom. Finally, the p-value is the likelihood that that this is truly improvement if the simpler model were as good. We are going to be using he likelihood ratio value as a decision factor for the selected model, and the χ² value is `r round(model_comparison$Chisq[3], 2)`. Therefore, our selected model is the **Full Poisson** model. 
 
 ```{r, select model}
 #| echo: FALSE
@@ -333,7 +327,7 @@ pois_zeroin
 
 The DHARMa plots suggest that the fit of the Poisson model is less than ideal. It can be seen that in both graphs, the values on the far left being the simulated values from the model are vastly different from the red line, being the actual values. 
 
-The dispersion ratio the plot has displayed is `r round(disp_pois$statistic, 2)` (`r ifelse(disp_pois$p.value < .001, "*p* < .001", paste0("*p* = ", round(disp_pois$p.value, 3)))`), and the expected rate of zero is `r round(zi_pois$statistic, 2)` times the amount of zeros tha the Poisson model expects, meaning that there is a greater variance in our data than the Poisson model can account for. 
+The dispersion ratio the plot has displayed is `r round(pois_disp$statistic, 2)` (`r ifelse(pois_disp$p.value < .001, "*p* < .001", paste0("*p* = ", round(pois_disp$p.value, 3)))`), and the expected rate of zero is `r round(pois_zeroin$statistic, 2)` times the amount of zeros that the Poisson model expects, meaning that there is a greater variance in our data than the Poisson model can account for. 
 
 This overdispersion is important, as it carries the assumption that the variance is equal to the mean, so when this metric is incorrect, the other values that take into account the variance/mean, such as the standard errors, confidence intervals, and p-values, they are incorrect assumptions and will decrease each of these values. We cannot, however move straight to a zero-inflated model after these results, as zeros can be generated from two processes: structural (individuals never visiting the physician office), or sampling (count process, where it's sometimes zero).
 
@@ -361,12 +355,100 @@ summary(neg_binom)
 lrt_nb<-anova(poisson, neg_binom)
 lrt_nb
 ```
-Using a Likelihood Ratio Test to compare the Poisson model versus the negative binomial model, the χ² was found to be (`r lrt_nb[2, "Chi Df"]`) = `r round(lrt_nb[2, "Chisq"], 2)`, `r ifelse(lrt_nb[2, "Pr(>Chisq)"] < .001, "*p* < .001", paste0("*p* = ", round(lrt_nb[2, "Pr(>Chisq)"], 3)))`. These values show that the addition of another parameter (through the df value), as seen in the large Chisq value, showing that the model fits better the the added parameter. Additionally, both the AIC (`r round(lrt_nb$AIC[1] vs r round(lrt_nb$AIC[2])`)and BIC(`r round(lrt_nb$BIC[1])` vs. `r round(lrt_nb$BIC[2])`) were significantly lowered. Through these values, we can conclude that the NB2 model is a better fit. This added parameter was valuable in allowing the variance to exceed the mean, however these values cannot yet illustrate other problems such as extreme counts and excess zeros. 
+**DOUBLE CHECK VALUES AFTER RENDERING!**
+Using a Likelihood Ratio Test to compare the Poisson model versus the negative binomial model, the χ² was found to be (`r lrt_nb[2, "Chi Df"]`) = `r round(lrt_nb[2, "Chisq"], 2)`, `r ifelse(lrt_nb[2, "Pr(>Chisq)"] < .001, "*p* < .001", paste0("*p* = ", round(lrt_nb[2, "Pr(>Chisq)"], 3)))`. These values show that the addition of another parameter (through the df value), as seen in the large Chisq value, showing that the model fits better the the added parameter. Additionally, both the AIC and BIC (**Code values**) were significantly lowered. Through these values, we can conclude that the NB2 model is a better fit. This added parameter was valuable in allowing the variance to exceed the mean, however these values cannot yet illustrate other problems such as extreme counts and excess zeros. 
 
-## 4.3 
+## 4.3 Double-Checking NB2 with DHARMa
+```{r, nb2-DHARMa}
+#| echo: FALSE
 
-**DOUBLE CHECK THIS AFTER RENDERING!**
+#We use the same seed to be reproducible and comaprable to Poisson check. 
+set.seed(9041)
+res_nb <- simulateResiduals(neg_binom, n = 500, plot = FALSE)
+plot(res_nb)
+```
+
+We would like to perform additional tests regarding the dispersion, as it becomes close to zero it indicates non-significance. We would also like to observe whether the model has produced a number of zeros similar to the observed, determining whether a hurdle or zero-inflated model might be needed. 
+```{r, nb-tests}
+#| echo: FALSE
+
+# Dispersion test 
+disp_nb <- testDispersion(res_nb)
+
+#Production of zeros: zero-infalted or hurdle model needed?
+zi_nb <- testZeroInflation(res_nb)
+
+```
+
+The negative binomial model has resolved overdispersion, as the ratio is now `r round(disp_nb$statistic, 2)` (`r ifelse(disp_nb$p.value < .001, "*p* < .001", paste0("*p* = ", round(disp_nb$p.value, 3)))`), and non-significant. 
+
+### Visualizing Predicted Counts 
+
+Coefficients on the log scale are hard to picture, so it helps to plot what the model predicts on the count scale. Here we plot predicted article counts across mentor productivity, holding the other predictors at their reference levels (Men, Single) or means (`kid5`, `phd`).
+
+```{r nb-pred-plot}
+#| echo: FALSE
 
 
+#education [0:40]" plots school years from 0 to 20.
+pred_nb <- predict_response(neg_binom, terms = "school [0:20]")
 
-COMMIT AFTER STEP 4 
+plot(pred_nb) +
+  labs(
+    title = "Predicted Physician Visits Based on Years of School",
+    x = "Years of School", y = "Predicted Visits")
+
+```
+This model has created a curved line upwards, despite the predictors being linear, due to the use of a log link, as each year of school added isn't 1, but rather the log of it, multiplying the expected count. 
+
+In double checking these plots, the QQ plots should (and are) closer to the diagonal line, in which they are, showing the NB2 is adequate with residuals being closer to predicted. However, the DHARMa residual vs predicted illustrates that there is a curve rather than the expected flat, fitted line. This curvature looks to have a pattern, meaning that the residuals likely are not random (as they should be, which would create the ideal straight line); this illustrated systemic changes, which are not desirable in a model, and they do not match the horizontal, red quantile lines. EMPHASIZE LOG LINK 
+
+# 5. Do Zeros Need Their Own Model? 
+Are there more zeros than our model predicts? 
+
+Given our QQ plot and our residual versus predicted graph, we can see that the model gives a well-reproduced amount of zeros, and the variance is enough to account for this (observed/expected = `r round(zi_nb$statistic, 2)`, *p* = `r round(zi_nb$p.value, 3)`). Therefore, we do not need a separate model and can continue with the negative binary model. ????
+rewrite to say that the zeros are underestimated, as the red line is to the right. 
+
+*rewrite* 
+The other two models that could be used are the zero-inflated model (structured versus sampling) or the hurdle model (hurdle component, and the zero-truncated component). 
+
+```{r, zero-models}
+#| echo: FALSE
+#| eval: FALSE
+
+#Here we can look at the zero-inflated model and the hurdle model
+
+# Zero-inflated model with constant zero 
+m_zinb <- glmmTMB(
+  visits ~ chronic + health + gender + school + insurance,
+  ziformula = ~ 1,
+  data = data, family = nbinom2()
+)
+
+# Zero-inflated NB with predictors in zero
+m_zinb_full <- glmmTMB(
+  visits ~ chronic + health + gender + school + insurance,
+  ziformula = ~ chronic + health + gender + school + insurance,
+  data = data, family = nbinom2()
+)
+
+# Hurdle Model 
+m_hurd <- glmmTMB(
+ visits ~ chronic + health + gender + school + insurance,
+  ziformula = ~ chronic + health + gender + school + insurance,
+  data = data, family = truncated_nbinom2()
+ )
+
+# Comparing hurdle and zero models
+anova(neg_binom, m_zinb_full)
+
+# As they are not nested, we must use AIC and not BIC 
+AIC(neg_binom, m_zinb, m_zinb_full, m_hurd)
+BIC(neg_binom, m_zinb, m_zinb_full, m_hurd)
+
+# Double checking the models with DHARMa
+set.seed(9041)
+res_hurd <- simulateResiduals(m_hurd, n = 500, plot = FALSE)
+testZeroInflation(res_hurd)
+```
+Upon using the hurdle and zero-inflated models, there are interesting findings. The NB2 and ZINB showed that the LRT value of the ZINB was higher than that of NB2 (as they were nested models), showing the added complexity was worth it, as it is better fitting. As NB2, ZINB and hurdle models are not nested, they must be compared with AIC and BIC metrics. It was shown that *inline code for all 3*, showing that values for NM2 are the highest, followed by ZINB, then hurdle model values being the smallest, showing that it has the best predictive accuracy. Upon double checking the chosen, hurdle model, it is seen that the observed values are very well within the estimated values, supporting its ability as a model. For these aforementioned reasons, I chose to continue with the hurdle model. 
