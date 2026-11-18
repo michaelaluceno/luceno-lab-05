@@ -1,0 +1,76 @@
+---
+title: "Count Regression: Workflow"
+subtitle: "Poisson and Negative Binomial Models in Physician Visits"
+author: "Michaela Luceno"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    embed-resources: true
+    code-tools: true
+editor: visual
+execute:
+  warning: false
+  message: false
+  echo: false
+---
+
+```{r, setup}
+#| echo: FALSE
+
+#1.2 Loading packages 
+library(dplyr)
+library(tidyverse)
+library(glmmTMB)
+library(DHARMa)
+library(ggeffects)
+library(emmeans)
+library(broom.mixed)
+library(gt)
+library(AER)
+
+#1.3 Loading the dataset
+data(NMES1988)
+data <- NMES1988
+
+##CREATE TABLE OF VALUES 
+
+#Selecting variables from dataset
+chosen_data <- data|>
+  select(visits,
+         chronic,
+         health,
+         gender, 
+         school,
+         insurance)
+
+#Assign a reference group 
+data <- data |>
+  mutate(
+    health = fct_relevel(factor(health), "average"),
+    gender = fct_relevel(factor(gender), "male")
+  )
+```
+
+
+```{r, variable table}
+#| tbl-cap: "Variable Description Table"
+
+variable_table <- data.frame(
+  Variable = c("visits", "chronic", "health", "gender", "school", "Insurance"), 
+  Descprtion = c(
+    "Number of physician office visits",
+    "Number of chronic conditions",
+    "Self-perceived health (poor, average, excellent"), 
+  "Male or Female",
+  "Years of education", 
+  "Covered by private insurance",
+  Role = c("Outcome",
+           "Predictor",
+           "Predictor",
+           "Predictor",
+           "Predictor",
+           "Predictor"))
+```
+
+
