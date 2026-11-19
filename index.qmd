@@ -1,5 +1,5 @@
 ---
-title: "Count Regression: Workflow"
+title: "Exploring Count Regression"
 subtitle: "Poisson and Negative Binomial Models in Physician Visits"
 author: "Michaela Luceno"
 format:
@@ -14,7 +14,9 @@ execute:
   message: false
   echo: false
 ---
-# 1. Loading Data 
+
+# 1. Loading Data
+
 ```{r, setup}
 #| echo: FALSE
 
@@ -50,7 +52,8 @@ data <- data |>
   )
 ```
 
-## 1.2 Looking at Variables 
+## 1.2 Looking at Variables
+
 ```{r, variable table}
 #| tbl-cap: "Variable Description Table"
 
@@ -71,7 +74,7 @@ variable_table <- data.frame(
            "Predictor"))
 ```
 
-Our reference variable for the health category is **Average** and **Male** for the gender category. 
+Our reference variable for the health category is **Average** and **Male** for the gender category.
 
 ```{r, describe data}
 #| echo: FALSE
@@ -101,10 +104,13 @@ descriptive_plot <- ggplot(data, aes(x = visits)) +
 descriptive_plot
 
 ```
-Upon initially analyzing the data, it can be observed that it is count data; all values are whole numbers being 0 or higher, and it presents a positive, right skew. The variance is `r round(visit_summary$var, 2)`) is about `r round(visit_summary$var / visit_summary$mean, 2)` times the mean (`r round(visit_summary$mean, 2)`. This data is very overdispersed and there's more spread than Poisson would assume, as Poisson assumes the variance is equal to the mean. In order to understand the count, we can see that **`r round(100 * visit_summary$p_zero)`%** have never visited the doctor. We would need to see if the model truly has this amount of zeros. 
 
-# 2. Specify Competing Models 
-## 2.1 Why not a linear model? 
+Upon initially analyzing the data, it can be observed that it is count data; all values are whole numbers being 0 or higher, and it presents a positive, right skew. The variance is `r round(visit_summary$var, 2)` is about `r round(visit_summary$var / visit_summary$mean, 2)` times the mean `r round(visit_summary$mean, 2)`. This data is very overdispersed and there's more spread than Poisson would assume, as Poisson assumes the variance is equal to the mean. In order to understand the count, we can see that **`r round(100 * visit_summary$p_zero)`%** have never visited the doctor. We would need to see if the model truly has this amount of zeros.
+
+# 2. Specify Competing Models
+
+## 2.1 Why not a linear model?
+
 ```{r, gaussian model test}
 #| echo: FALSE 
 #| 
@@ -120,13 +126,14 @@ set.seed(9041)
 res_gauss <- simulateResiduals(m_gauss, n = 500, plot = FALSE)
 plot(res_gauss)
 ```
-The function, DHARMa approximates new, predicted data from the fitted models and determining where the observed data is. If it was fitting the Gaussian model well, there would be uniform residuals along the QQ plot, however the shape notes that there is a cluster of low values near 0 and a cluster of higher values near 1. This linear model is not accurate predictive or representative of our count data. Deeper issues also lie, as Gaussian models can have negative counts with no bounds, however doctors visits in our data can't be less than 0. It assumes a constant variance, however the variance grows with the mean, and Poisson predicts it is the same. Finally, it treats the effects as additive, however it's more typical to multiply the count. 
+
+The function, DHARMa approximates new, predicted data from the fitted models and determining where the observed data is. If it was fitting the Gaussian model well, there would be uniform residuals along the QQ plot, however the shape notes that there is a cluster of low values near 0 and a cluster of higher values near 1. This linear model is not accurate predictive or representative of our count data. Deeper issues also lie, as Gaussian models can have negative counts with no bounds, however doctors visits in our data can't be less than 0. It assumes a constant variance, however the variance grows with the mean, and Poisson predicts it is the same. Finally, it treats the effects as additive, however it's more typical to multiply the count.
 
 ## 2.2 Specifying Nested Poisson Models
 
-We are going to specify 3 nested models here. This means that there is an intercept model with only the outcome variable, and in each model, predictors are added. 
+We are going to specify 3 nested models here. This means that there is an intercept model with only the outcome variable, and in each model, predictors are added.
 
- Model | Formula | Research rationale |
+| Model | Formula | Research rationale |
 |:-----------------------|:-----------------------|:-----------------------|
 | null: Null | `visits ~ 1` | Baseline model |
 | one_predictor: Chronic | `visits ~ chronic` | Evaluate number of chronic conditions |
@@ -155,9 +162,9 @@ poisson <- glmmTMB(
   family = poisson(link = "log"))
 ```
 
-## 2.2 Exploring and Comparing Fitted Models 
+## 2.2 Exploring and Comparing Fitted Models
 
-Due to our models being nested, we can compare them all using an anova. 
+Due to our models being nested, we can compare them all using an anova.
 
 ```{r, anova}
 #| echo: FALSE 
@@ -177,8 +184,7 @@ tests <- tests |>
     Nested.p.value = `Pr(>Chisq)`)
 ```
 
-### 5.2 Model Performance 
-
+### Model Performance
 
 ```{r, extract model metrics}
 #| echo: FALSE
@@ -204,7 +210,7 @@ glances <- rbind(
   glance2)
 ```
 
-### 2.3 Combining Nested Test & Model Performance 
+## 2.3 Combining Nested Test & Model Performance
 
 ```{r, combine comparisons}
 #| echo: FALSE
@@ -215,7 +221,7 @@ comparison_table <- cbind(
   tests)
 ```
 
-### 2.4 Displaying the Combined Table 
+## 2.4 Displaying the Combined Table
 
 ```{r, model comparison table}
 #| echo: FALSE
@@ -271,8 +277,12 @@ comparison_table |>
   )
 ```
 
-### 2.5 Interpreting the combined table
+## 2.5 Interpreting the combined table
 
+The χ² value when looking between the null and a single predictor is `r round(comparison_table$Nested.Chisq.stat[2], 2)`, with `r comparison_table$Nested.df[2]` df, and the p-value of `r format.pval(comparison_table$Nested.p.value[2], eps = .001)`. When comparing the one predictor model to the full model, the χ² is `r round(comparison_table$Nested.Chisq.stat[3], 2)`, the df is `r comparison_table$Nested.df[3]`, and the p-value is
+`r format.pval(comparison_table$Nested.p.value[3], eps = .001)`. 
+
+The χ² statistic is the likelihood ratio, where the deviation will decrease with increased complexity as there are more factors as they account for more. The df accounts for how many parameters are being added, with the total number of variables being one more than the degrees of freedom. Finally, the p-value is the likelihood that that this is truly improvement if the simpler model were as good. We are going to be using he likelihood ratio value as a decision factor for the selected model, and the χ² value is `r round(comparison_table$Nested.Chisq.stat[3], 2)` (p `r format.pval(comparison_table$Nested.p.value[3], eps = .001)`), indicating significant improvement in fit. Therefore, our selected model is the **Full Poisson** model.
 
 ```{r, select model}
 #| echo: FALSE
@@ -294,9 +304,10 @@ selected_model <- switch(
 
 The provisionally selected model is **`r selected_name`**, and the AIC value is **`r round(AIC(selected_model), 3)`**, and the BIC value is **`r round(BIC(selected_model), 3)`**.
 
-# 3. Evaluating the Poisson Model 
+# 3. Evaluating the Poisson Model
 
-## 3.1 Simulating Residuals 
+## 3.1 Simulating Residuals
+
 ```{r, poisson model DHARMa}
 #| echo: FALSE 
 
@@ -311,7 +322,8 @@ plot(res_pois)
 ```
 
 ## 3.2 Testing for Overdispersion & Excess Zeros
-This test will assess whether the observed variance is larger or smaller than our Poisson model would expect, and if there are more zeros than expected. 
+
+This test will assess whether the observed variance is larger or smaller than our Poisson model would expect, and if there are more zeros than expected.
 
 ```{r, dispersion}
 pois_disp <- testDispersion(res_pois)
@@ -323,19 +335,20 @@ pois_zeroin <- testZeroInflation(res_pois)
 pois_zeroin
 ```
 
-## 3.3 Interpreting the Diagnostics 
+## 3.3 Interpreting the Diagnostics
 
-The DHARMa plots suggest that the fit of the Poisson model is less than ideal. It can be seen that in both graphs, the values on the far left being the simulated values from the model are vastly different from the red line, being the actual values. 
+The DHARMa plots suggest that the fit of the Poisson model is less than ideal. It can be seen that in both graphs, the values on the far left being the simulated values from the model are vastly different from the red line, being the actual values.
 
-The dispersion ratio the plot has displayed is `r round(pois_disp$statistic, 2)` (`r ifelse(pois_disp$p.value < .001, "*p* < .001", paste0("*p* = ", round(pois_disp$p.value, 3)))`), and the expected rate of zero is `r round(pois_zeroin$statistic, 2)` times the amount of zeros that the Poisson model expects, meaning that there is a greater variance in our data than the Poisson model can account for. 
+The dispersion ratio the plot has displayed is `r round(pois_disp$statistic, 2)` (`r ifelse(pois_disp$p.value < .001, "*p* < .001", paste0("*p* = ", round(pois_disp$p.value, 3)))`), and the expected rate of zero is `r round(pois_zeroin$statistic, 2)` times the amount of zeros that the Poisson model expects, meaning that there is a greater variance in our data than the Poisson model can account for.
 
-This overdispersion is important, as it carries the assumption that the variance is equal to the mean, so when this metric is incorrect, the other values that take into account the variance/mean, such as the standard errors, confidence intervals, and p-values, they are incorrect assumptions and will decrease each of these values. We cannot, however move straight to a zero-inflated model after these results, as zeros can be generated from two processes: structural (individuals never visiting the physician office), or sampling (count process, where it's sometimes zero).
+This overdispersion is important, as it carries the assumption that the variance is equal to the mean. Therefore, when this metric is incorrect, the other values that take into account the variance/mean, such as the standard errors, confidence intervals, and p-values, are also incorrect and likely decreased. We cannot, however move straight to a zero-inflated model after these results, as zeros can be generated from two processes: structural (individuals never visiting the physician office), or sampling (count process, where it's sometimes zero).
 
-# 4. Fit and Evalute Negative Binomial Model 
+# 4. Fit and Evaluate Negative Binomial Model
 
-As the Poisson model did not fit well, we will be using a negative binomial model, which incorporates a dispersion parameter so that the variance is no longer equal to the mean. However, the Poisson model is still nested so that we can compare the two to assess which has better predictive ability (using a likelihood ratio test). 
+As the Poisson model did not fit well, we will be using a negative binomial model, which incorporates a dispersion parameter so that the variance is no longer equal to the mean. However, the Poisson model is still nested so that we can compare the two to assess which has better predictive ability (using a likelihood ratio test).
 
-## 4.1 Estimate the NB2 Model 
+## 4.1 Estimate the NB2 Model
+
 ```{r, negative-binomial}
 #| echo: FALSE
 
@@ -349,16 +362,18 @@ summary(neg_binom)
 ```
 
 ## 4.2 Compare the Poisson and NB2
+
 ```{r, NB vs Poisson}
 
 #Using LRT to see if NB fits better than Poisson
 lrt_nb<-anova(poisson, neg_binom)
 lrt_nb
 ```
-**DOUBLE CHECK VALUES AFTER RENDERING!**
-Using a Likelihood Ratio Test to compare the Poisson model versus the negative binomial model, the χ² was found to be (`r lrt_nb[2, "Chi Df"]`) = `r round(lrt_nb[2, "Chisq"], 2)`, `r ifelse(lrt_nb[2, "Pr(>Chisq)"] < .001, "*p* < .001", paste0("*p* = ", round(lrt_nb[2, "Pr(>Chisq)"], 3)))`. These values show that the addition of another parameter (through the df value), as seen in the large Chisq value, showing that the model fits better the the added parameter. Additionally, both the AIC and BIC (**Code values**) were significantly lowered. Through these values, we can conclude that the NB2 model is a better fit. This added parameter was valuable in allowing the variance to exceed the mean, however these values cannot yet illustrate other problems such as extreme counts and excess zeros. 
+
+Using a Likelihood Ratio Test to compare the Poisson model versus the negative binomial model, the χ² was found to be (`r lrt_nb[2, "Chi Df"]`) = `r round(lrt_nb[2, "Chisq"], 2)`, `r ifelse(lrt_nb[2, "Pr(>Chisq)"] < .001, "*p* < .001", paste0("*p* = ", round(lrt_nb[2, "Pr(>Chisq)"], 3)))`. These values show that the addition of another parameter (through the df value), as seen in the large Chisq value, showing that the model fits better the the added parameter. Additionally, both the AIC and BIC (`r round(AIC(poisson))` to `r round(AIC(neg_binom))`, `r round(BIC(poisson))` to `r round(BIC(neg_binom))` respectively) were significantly lowered. Through these values, we can conclude that the NB2 model is a better fit. This added parameter was valuable in allowing the variance to exceed the mean, however these values cannot yet illustrate other problems such as extreme counts and excess zeros.
 
 ## 4.3 Double-Checking NB2 with DHARMa
+
 ```{r, nb2-DHARMa}
 #| echo: FALSE
 
@@ -368,7 +383,10 @@ res_nb <- simulateResiduals(neg_binom, n = 500, plot = FALSE)
 plot(res_nb)
 ```
 
-We would like to perform additional tests regarding the dispersion, as it becomes close to zero it indicates non-significance. We would also like to observe whether the model has produced a number of zeros similar to the observed, determining whether a hurdle or zero-inflated model might be needed. 
+We would like to perform additional tests regarding the dispersion, as it becomes close to zero it indicates non-significance. We would also like to observe whether the model has produced a number of zeros similar to the observed, determining whether a hurdle or zero-inflated model might be needed.
+
+In double checking these plots, the QQ plots should (and are) closer to the diagonal line, in which they are, showing the NB2 is adequate with residuals being closer to predicted. However, the DHARMa residual vs predicted illustrates that there is a curve rather than the expected flat, fitted line. This curvature looks to have a pattern, meaning that the residuals likely are not random (as they should be, which would create the ideal straight line); this illustrated systemic changes, which are not desirable in a model, and they do not match the horizontal, red quantile lines. 
+
 ```{r, nb-tests}
 #| echo: FALSE
 
@@ -380,11 +398,11 @@ zi_nb <- testZeroInflation(res_nb)
 
 ```
 
-The negative binomial model has resolved overdispersion, as the ratio is now `r round(disp_nb$statistic, 2)` (`r ifelse(disp_nb$p.value < .001, "*p* < .001", paste0("*p* = ", round(disp_nb$p.value, 3)))`), and non-significant. 
+The negative binomial model has resolved overdispersion, as the ratio is now `r round(disp_nb$statistic, 2)` (`r ifelse(disp_nb$p.value < .001, "*p* < .001", paste0("*p* = ", round(disp_nb$p.value, 3)))`), and non-significant.
 
-### Visualizing Predicted Counts 
+### Visualizing Predicted Counts
 
-Coefficients on the log scale are hard to picture, so it helps to plot what the model predicts on the count scale. Here we plot predicted article counts across mentor productivity, holding the other predictors at their reference levels (Men, Single) or means (`kid5`, `phd`).
+Coefficients on the log scale are hard to picture, so it helps to plot what the model predicts on the count scale. Here we plot predicted article counts across mentor productivity, holding the other predictors at their reference levels (Men, Average) or means.
 
 ```{r nb-pred-plot}
 #| echo: FALSE
@@ -399,22 +417,18 @@ plot(pred_nb) +
     x = "Years of School", y = "Predicted Visits")
 
 ```
-This model has created a curved line upwards, despite the predictors being linear, due to the use of a log link, as each year of school added isn't 1, but rather the log of it, multiplying the expected count. 
 
-In double checking these plots, the QQ plots should (and are) closer to the diagonal line, in which they are, showing the NB2 is adequate with residuals being closer to predicted. However, the DHARMa residual vs predicted illustrates that there is a curve rather than the expected flat, fitted line. This curvature looks to have a pattern, meaning that the residuals likely are not random (as they should be, which would create the ideal straight line); this illustrated systemic changes, which are not desirable in a model, and they do not match the horizontal, red quantile lines. EMPHASIZE LOG LINK 
+This model has created a curved line upwards, despite the predictors being linear, due to the use of a log link, as each year of school added isn't 1, but rather the log of it, multiplying the expected count.
 
-# 5. Do Zeros Need Their Own Model? 
-Are there more zeros than our model predicts? 
+# 5. Do Zeros Need Their Own Model?
 
-Given our QQ plot and our residual versus predicted graph, we can see that the model gives a well-reproduced amount of zeros, and the variance is enough to account for this (observed/expected = `r round(zi_nb$statistic, 2)`, *p* = `r round(zi_nb$p.value, 3)`). Therefore, we do not need a separate model and can continue with the negative binary model. ????
-rewrite to say that the zeros are underestimated, as the red line is to the right. 
+Are there more zeros than our model predicts?
 
-*rewrite* 
-The other two models that could be used are the zero-inflated model (structured versus sampling) or the hurdle model (hurdle component, and the zero-truncated component). 
+Given our QQ plot and our residual versus predicted graph, we can see that the model does not provide a well-reproduced amount of zeros, as seen by the red line far towards the right of the simulated zeros, showing more zeros than expected (observed/expected = `r round(zi_nb$statistic, 2)`, *p* = `r round(zi_nb$p.value, 3)`). 
+The other two models that could be used are the zero-inflated model (structured versus sampling) or the hurdle model (hurdle component, and the zero-truncated component).
 
 ```{r, zero-models}
 #| echo: FALSE
-#| eval: FALSE
 
 #Here we can look at the zero-inflated model and the hurdle model
 
@@ -451,4 +465,188 @@ set.seed(9041)
 res_hurd <- simulateResiduals(m_hurd, n = 500, plot = FALSE)
 testZeroInflation(res_hurd)
 ```
-Upon using the hurdle and zero-inflated models, there are interesting findings. The NB2 and ZINB showed that the LRT value of the ZINB was higher than that of NB2 (as they were nested models), showing the added complexity was worth it, as it is better fitting. As NB2, ZINB and hurdle models are not nested, they must be compared with AIC and BIC metrics. It was shown that *inline code for all 3*, showing that values for NM2 are the highest, followed by ZINB, then hurdle model values being the smallest, showing that it has the best predictive accuracy. Upon double checking the chosen, hurdle model, it is seen that the observed values are very well within the estimated values, supporting its ability as a model. For these aforementioned reasons, I chose to continue with the hurdle model. 
+
+Upon using the hurdle and zero-inflated models, there are interesting findings. The NB2 and ZINB showed that the LRT value of the ZINB was higher than that of NB2 (χ² = `r round(2 * (as.numeric(logLik(m_zinb_full)) - as.numeric(logLik(neg_binom))), 2)`, df = `r attr(logLik(m_zinb_full), "df") - attr(logLik(neg_binom), "df")`) (as they were nested models), showing the added complexity was worth it, as it is better fitting. As NB2, ZINB and hurdle models are not nested, they must be compared with AIC and BIC metrics. AIC was `r round(AIC(neg_binom), 1)` for NB2, `r round(AIC(m_zinb_full), 1)` for ZINB and `r round(AIC(m_hurd), 1)` for the hurdle model, and the BIC values were `r round(BIC(neg_binom), 1)`, `r round(BIC(m_zinb_full), 1)` and `r round(BIC(m_hurd), 1)`. It was shown that values for NM2 are the highest, followed by ZINB, then hurdle model values being the smallest, showing that it has the best predictive accuracy. Upon double checking the chosen, hurdle model, it is seen that the observed values are very well within the estimated values, supporting its ability as a model. For these aforementioned reasons, I chose to continue with the hurdle model.
+
+# 6. Test and Probe Interaction
+
+We now ask whether there may be an association between the number of chronic conditions a person has and the number of physician visits differing based off of sex?
+
+## 6.1 Prediction
+
+We predict that gender (male versus female) will moderate the direction of correlation such that females will create a more positive association than that of men. This means that there is a stronger positive correlation between the number of chronic conditions and the subsequent physician visits compared to that of men, who are predicted to have less of a positive correlation, if even negative.
+
+## 6.2 Fitting the Interaction Model
+
+```{r int-fit}
+#| echo: FALSE
+
+#NB model with chronic vs gender  
+#health, school, insurance are all kept constant 
+interact <- glmmTMB(
+  visits ~ health + school + insurance + chronic * gender,
+  data   = data,
+  family = nbinom2(link = "log")
+)
+
+summary(interact)
+```
+
+## 6.3 Test whether the interaction is needed
+
+We will be testing whether the interaction with gender improves the fit over the model
+
+```{r interactl LRT}
+#| echo: FALSE
+
+# Doing LRT to assess whether the interaction has any other effect 
+lrt_int <- anova(neg_binom, interact)
+lrt_int
+```
+
+This omnibus test reveals potential interactions between the variable of chronic conditions and gender. The χ² was  `r round(2 * (as.numeric(logLik(interact)) - as.numeric(logLik(neg_binom))), 2)`, the df was `r attr(logLik(interact), "df") - attr(logLik(neg_binom), "df")` and the p-value was `r format.pval(pchisq(2 * (as.numeric(logLik(interact)) - as.numeric(logLik(neg_binom))), df = attr(logLik(interact), "df") - attr(logLik(neg_binom), "df"), lower.tail = FALSE), eps = .001)`. Adding the interaction showed very little benefit, if even a reduced predictive ability. The next few tests will show the possibilities of what probing might add.  
+
+## 6.4 Plot Predicted Counts
+
+```{r, plotting predicted counts}
+#| echo: FALSE
+
+# Predicted mean physician visits from interaction as count values 
+pred_int <- predict_response(interact, terms = c("chronic", "gender"))
+
+plot(pred_int) +
+  scale_colour_manual(values = c(male = "#66CDAA", female = "#FF69B4")) +
+  scale_fill_manual(values = c(male = "#66CDAA", female = "#FF69B4")) +
+  labs(
+    title  = "Predicted Physician Visits From Chronic Conditions and Gender",
+    x      = "Number of Chronic Conditions", y = "Predicted Visits",
+    colour = NULL, fill = NULL)+ 
+  theme_minimal(base_size = 10) + 
+  theme(plot.title = element_text(face = "oblique"))
+```
+
+## 6.5 Probe the Interaction
+
+Here we will find the slopes of the number of chronic conditions with gender and compare it against 0.
+
+### Simple Slopes
+
+```{r int-slopes}
+#| echo: FALSE
+
+# Simple slopes: the slope of phd estimated separately within each gender.
+slopes <- emtrends(
+  interact, 
+  specs = ~ gender, 
+  var = "chronic")
+slopes
+```
+
+### Slope Comparison
+
+```{r, slope comparison}
+pairs(slopes)
+```
+
+### Simple Slopes Tested Against Zero
+
+```{r, against zero}
+#simple slopes against zero 
+slopes_sum <- summary(slopes, infer = TRUE)
+slopes_sum
+```
+
+The `pairs(slopes)` tests the interaction, but the sign flipped by changing the order of categories. The slopes do not differ, but the signs change.
+
+### Simple Effects
+
+Now flip it: the gender gap at low amounts of chronic conditions (−1 *SD*), average, and high (+1 *SD*) amounts of chronic conditions. We look at the gender difference at different chronic condition values, rather than the chronic conditions within each gender.
+
+```{r, interac simple-effects}
+#| echo: FALSE
+
+# Creating provbing values, low (-1 SD), average (mean) and high (+1 SD) prestige.
+chronic_mean <- mean(data$chronic, na.rm = TRUE)
+chronic_sd <- sd(data$chronic, na.rm = TRUE)
+chronic_values <- chronic_mean + c(-1, 0, 1) * chronic_sd
+
+# Estimated marginal means (EMMs) for each gender for each benchmark of chronic condition
+gender_emmeans <- emmeans(
+  interact,
+  specs = ~ gender | chronic,
+  at = list(chronic = chronic_values)
+)
+
+# Estimated mean article counts in each gender x chronic condition cell
+summary(gender_emmeans, type = "response")
+
+# Gender differences at each prestige value, on the log scale.
+pairs(gender_emmeans)
+
+```
+
+**Simple Slopes** It can be seen that the slope different from the pairs() function being the differences betwen the male-female simple slopes, creating the interaction coefficient. However, when males are the reference group, it is female-male so that the estimate, standard error and p-value match, but the sign flips; they are both  on the log scale. The sign is different simply because of flipped ordering of male and female in the different computations. Even though there are only two levels, there is only the comparison of two groups in the moderator, being male vs female, creating the interaction coefficient.
+**Simple Effects** The `emmeans()` counts differ, as they averages the predictors at the mean. However, `ggeffect()` hold these constant fixing them at a reference value (meaning, gender being male and health being average). We also used +/-1SD which is a decimal value, `ggplot()` uses whole numbers. The contrasts, being the male-female differences do not differ as it only depends on the gender coefficients (the two values of the moderator) not on other predictor values.
+
+## 6.6 Report the simple effects in a table
+
+```{r, interaction table}
+#| echo: FALSE
+
+# Build a data frame of the gender simple effects, then format it as a table.
+contrast_df <- summary(pairs(gender_emmeans)) |>
+  as.data.frame() |>
+  mutate(
+    chronic_level = c("-1 SD", "Mean", "+1 SD")[match(round(chronic, 6), round(chronic_values, 6))]
+  ) |>
+  select(chronic_level, contrast, estimate, SE, z.ratio, p.value)
+
+contrast_df |>
+  gt() |>
+  cols_label(
+    chronic_level = "Chronic Conditions", contrast = "Contrast",
+    estimate = "Log Contrast", SE = "SE", z.ratio = "z", p.value = "p"
+  ) |>
+  fmt_number(columns = c(estimate, SE, z.ratio), decimals = 3) |>
+  fmt(columns = p.value,
+      fns = \(x) scales::pvalue(x, accuracy = 0.001, add_p = FALSE)) |>
+  tab_header(
+    title    = "Simple Effects of Gender Across Number of Chronic Conditions",
+    subtitle = "Negative-binomial regression (log link)"
+  ) |>
+  tab_source_note(
+    "Log contrasts = Men − Women. z-tests and p-values are computed on the log scale."
+  )
+```
+
+## 6.7 Interpret the Interaction
+
+**Chronic Condition Association Differing by Gender?** Throughout the tests performed, the LRT found was extremely small(χ²(`r lrt_int[2, "Chi Df"]`) = `r round(lrt_int[2, "Chisq"], 2)`, `r ifelse(lrt_int[2, "Pr(>Chisq)"] < .001, "*p* < .001", paste0("*p* = ", round(lrt_int[2, "Pr(>Chisq)"], 3)))`), and upon adding the interaction, showing that adding the interaction did not increase predictive ability/fit. Furthermore, when incorporating AIC & BIC, the fit was worse (AIC = `r round(AIC(interact), 1)` vs. `r round(AIC(neg_binom), 1)` without the interaction; BIC = `r round(BIC(interact), 1)` vs. `r round(BIC(neg_binom), 1)`). Furthermore, in assessing the log contrasts between males and females, they are so similar that differences between them and interaction with chronic conditions cannot be deduced, and there are no differences in slopes. Generally, men have lower numbers of visits as a whole, whoever this is simply a gender difference, rather than reflective of the impact of less chronic conditions.
+
+**Confidence in the Interaction** Using the omnibus results and probing tests, some data was revealed, however it did not necessarily increase the confidence in the interaction, as our data reflects a lack of interaction between chronic condition and gender. Using various tests, such as information criteria, the omnibus test as well as additional probing have not been reflective of moderated effects. While there are gender differences present, none of the tests have provided adequate values to assume anything beyond purely gender differences, for example, the gap with omnibus test are fairly constant and parallel, rather than intersection.
+
+# 7. Write Up & Discussion of Findings
+
+### Model Selection
+
+There were a few steps necessary to come to the final hurdle model. To begin, there was initial overdispersion found (mean = `r round(visit_summary$mean, 2)`, variance = `r round(visit_summary$var, 2)`, `r round(visit_summary$p_zero * 100, 1)`% zeros). We initially verified whether a Gaussian, linear model may be appropriate, however it was not, which led to the use of 3 nested Poisson models (null, the addition of chronic, addition of all other predictors), finally selecting the most complex model, the "Full Poisson" before continuing. The Poisson model's DHARMa yielded a dispersion ratio of (`r round(pois_disp$statistic, 2)` (`r ifelse(pois_disp$p.value < .001, "*p* < .001", paste0("*p* = ", round(pois_disp$p.value, 3)))`) and a zero-inflation ratio of `r round(pois_zeroin$statistic, 2)` (`r ifelse(pois_zeroin$p.value < .001, "*p* < .001", paste0("*p* = ", round(pois_zeroin$p.value, 3)))`), which showed overdispersion and excess zeros, respectively. We then chose to fit a negative binomial model (NB2), and then compare the Poisson and NB2 through the LRT as they are nested models. The NB2 displayed an improved fit, with χ², df, p (`r lrt_nb[2, "Chi Df"]`) = `r round(lrt_nb[2, "Chisq"], 2)`, `r ifelse(lrt_nb[2, "Pr(>Chisq)"] < .001, "*p* < .001", paste0("*p* = ", round(lrt_nb[2, "Pr(>Chisq)"], 3)))`). The overdispersion was seemingly resolved with this model with a dispersion ratio of `r round(disp_nb$statistic, 2)` (`r ifelse(disp_nb$p.value < .001, "*p* < .001", paste0("*p* = ", round(disp_nb$p.value, 3)))`), and a zero-inflation ratio of `r round(zi_nb$statistic, 2)` (`r ifelse(zi_nb$p.value < .001, "*p* < .001", paste0("*p* = ", round(zi_nb$p.value, 3)))`). However there were excess zeros that the model had not accounted for, so we elected to employ both a zero-inflated and hurdle model. The hurdle model displayed the most predictive accuracy and was the most ideal model that reported a more adequate estimation of zeros.
+
+### Main Effects
+
+In the end, the selected model was the hurdle model. For each predictor assessed, the others were held constant. For those with at least one physician visit, each additional chronic condition had a positive association/had more physician visits (*b* = `r round(fixef(m_hurd)$cond["chronic"], 2)`, 95% CI [`r round(confint(m_hurd)["cond.chronic", "2.5 %"], 2)`, `r round(confint(m_hurd)["cond.chronic", "97.5 %"], 2)`], `r scales::pvalue(summary(m_hurd)$coefficients$cond["chronic", "Pr(>|z|)"], accuracy = .001, add_p = TRUE)`). When looking at health, those in average health were held as the reference group, allowing the distinction that those in poorer health had more visits (*b* = `r round(fixef(m_hurd)$cond["healthpoor"], 2)`, 95% CI [`r round(confint(m_hurd)["cond.healthpoor", "2.5 %"], 2)`, `r round(confint(m_hurd)["cond.healthpoor", "97.5 %"], 2)`], `r scales::pvalue(summary(m_hurd)$coefficients$cond["healthpoor", "Pr(>|z|)"], accuracy = .001, add_p = TRUE)`), whereas those with better health had fewer amounts of visits (*b* = `r round(fixef(m_hurd)$cond["healthexcellent"], 2)`, 95% CI [`r round(confint(m_hurd)["cond.healthexcellent", "2.5 %"], 2)`, `r round(confint(m_hurd)["cond.healthexcellent", "97.5 %"], 2)`], `r scales::pvalue(summary(m_hurd)$coefficients$cond["healthexcellent", "Pr(>|z|)"], accuracy = .001, add_p = TRUE)`). With regards to school, those who had higher levels of schooling/education were associated with more visits to the physician office *b* = `r round(fixef(m_hurd)$cond["school"], 2)`, 95% CI [`r round(confint(m_hurd)["cond.school", "2.5 %"], 2)`, `r round(confint(m_hurd)["cond.school", "97.5 %"], 2)`], `r scales::pvalue(summary(m_hurd)$coefficients$cond["school", "Pr(>|z|)"], accuracy = .001, add_p = TRUE)`). When assessing those with versus without insurance, individuals who claimed to have insurance had more visits than those without (*b* = `r round(fixef(m_hurd)$cond["insuranceyes"], 2)`, 95% CI [`r round(confint(m_hurd)["cond.insuranceyes", "2.5 %"], 2)`, `r round(confint(m_hurd)["cond.insuranceyes", "97.5 %"], 2)`], `r scales::pvalue(summary(m_hurd)$coefficients$cond["insuranceyes", "Pr(>|z|)"], accuracy = .001, add_p = TRUE)`). Finally, when comparing gender, and keeping males as the reference group, there were no notable associations with visits for males versus females. This is the only predictor that was not significant (*b* = `r round(fixef(m_hurd)$cond["genderfemale"], 2)`, 95% CI [`r round(confint(m_hurd)["cond.genderfemale", "2.5 %"], 2)`, `r round(confint(m_hurd)["cond.genderfemale", "97.5 %"], 2)`], `r scales::pvalue(summary(m_hurd)$coefficients$cond["genderfemale", "Pr(>|z|)"], accuracy = .001, add_p = TRUE)`).
+
+### Interaction Report
+
+To explore improving the fit of the model, we studied the interaction between the number of chronic conditions and gender (male and female) and how this may influence the visits to the physician's office. With the additive effects, we saw that chronic conditions increased the amount of visits for both men and women, however this effect was slightly larger for men (χ²(1) = `r round(summary(neg_binom)$coefficients$cond["chronic", "z value"]^2, 2)`, `r scales::pvalue(summary(neg_binom)$coefficients$cond["chronic", "Pr(>|z|)"], accuracy = .001, add_p = TRUE)`). With the interaction model, however, there were no differences between males and females and no interactions effects were present (χ²(`r lrt_int[2, "Chi Df"]`) = `r round(lrt_int[2, "Chisq"], 2)`, `r ifelse(lrt_int[2, "Pr(>Chisq)"] < .001, "*p* < .001", paste0("*p* = ", round(lrt_int[2, "Pr(>Chisq)"], 3)))`). Within the predictors and the simple slopes were *b* = `r round(slopes_sum$chronic.trend[1], 3)`, 95% CI [`r round(slopes_sum$asymp.LCL[1], 3)`, `r round(slopes_sum$asymp.UCL[1], 3)`], `r scales::pvalue(slopes_sum$p.value[1], accuracy = .001, add_p = TRUE)` for males and *b* = `r round(slopes_sum$chronic.trend[2], 3)`, 95% CI [`r round(slopes_sum$asymp.LCL[2], 3)`, `r round(slopes_sum$asymp.UCL[2], 3)`], `r scales::pvalue(slopes_sum$p.value[2], accuracy = .001, add_p = TRUE)` for females. As these are all very similar, and were not significantly different, explaining why the LRT value was very small. Finally, the simple effect is that men have less visits than women, but by a consistent amount within the number of chronic conditions. However, at chronic conditions, the male-female log contrast at -1 SD is `r round(contrast_df$estimate[1], 3)`, with mean (`r round(contrast_df$estimate[2], 3)`), and at +1 SD the log contrast is (`r round(contrast_df$estimate[3], 3)`). These are significant, but within their respective categories. The largest difference was observed at +1 SD (+1SD), however only be `r round(abs(contrast_df$estimate[3]) - abs(contrast_df$estimate[1]), 3)` greater than -1 SD, which is inadequate for consideration, further indicating that the sex's interaction with chronic conditions was negligible.
+
+## 7.2 Discussion
+
+My results suggest that chronic conditions are seemingly have the strongest predictive abilities within the predictors. Realistically, this would be sensible, as those who have chronic conditions are likely seeking regular care measures and check-ins to ensure that their status hasn't worsened they are not in pain, or that they are receiving a regimented treatment plan (Queenan et al., 2021). Self-perceived health is additionally important, as it will determine the frequency of visits in a purely subjective manner. That is one limitation of the study, is that 'self-perceived health' is a valuable measure, however it is more subjective and may be easily confounded by factors such as anxiety or hypochondriac symptomatology (Mobley et al., 2019). Those perceived in excellent health have less visits than those in poorer health, however the active choice to potentially ignore symptoms and self-identify as "healthy" may create a slight inaccuracy in the data. However, this metric is second most important in understanding what leads to physician office visits. Other variables such as insurance and education are slightly lower, and seemingly have less of an effect on visits, potentially as they do not directly relate to the health of an individual. Private insurance creates some effect, though, due to prevalent concerns and remains a barrier to treatment. Another limitation of this study could be the healthcare system in the region(s) that the study was performed. For instance, Ontario has the Ontario Health Insurance Plan, where regardless if they have private insurance, there are some treatments that would not require payments regardless, compared to the USA, where this is not the case (Ross University School of Medicine \[RUSM\], 2021). Gender was found to be generally insignificant, and other "life"-related factors seemingly took precedence - health issues can happen to anyone. The obvious limitations, other than the ones that were listed were additionally self-report measures which may additionally be skewed due to the subjective nature of surveys. With healthcare especially, there are additional barriers to consider such as: distance, accessibility, time, cost, limited appointment availability, etc (Canadian Institute for Health Information \[CIHI\], 2024).
+
+**References** Canadian Institute for Health Information. (2024, December 5). Access to primary care: Many Canadians face challenges. https://www.cihi.ca/en/primary-and-virtual-care-access-emergency-department-visits-for-primary-care-conditions/access-to-primary-care-many-canadians-face-challenges 
+
+Mobley, D., Baum, N. H., Beattie, A., & Nemeroff, C. (2019). When Imagination Becomes a Disease: Dealing With Hypochondriacal Patients in Clinical Practice. Ochsner journal, 19(2), 70–73. https://doi.org/10.31486/toj.18.0123 
+
+Queenan, J. A., Wong, S. T., Barber, D., Morkem, R., & Salman, A. (2021). The prevalence of common chronic conditions seen in Canadian primary care: Results from the Canadian Primary Care Sentinel Surveillance Network. Canadian Primary Care Sentinel Surveillance Network. https://cpcssn.ca/wp-content/uploads/2021/05/cpcssn-chronic-conditions-report-2021.pdf 
+
+Ross University School of Medicine. (2021, May 11). US vs. Canadian healthcare: What is the difference? https://medical.rossu.edu/about/blog/us-vs-canadian-healthcare

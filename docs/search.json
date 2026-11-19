@@ -2,78 +2,155 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "Count Regression: Workflow",
+    "title": "Exploring Count Regression",
     "section": "",
-    "text": "Our reference variable for the health category is Average and Male for the gender category.\n\n\n     n     mean      var    p_zero max\n1 4406 5.774399 45.68712 0.1550159  89\n\n\n\n\n\n\n\n\n\n\n\nUpon initially analyzing the data, it can be observed that it is count data; all values are whole numbers being 0 or higher, and it presents a positive, right skew. The variance is 45.69) is about 7.91 times the mean (5.77. This data is very overdispersed and there’s more spread than Poisson would assume, as Poisson assumes the variance is equal to the mean. In order to understand the count, we can see that 16% have never visited the doctor. We would need to see if the model truly has this amount of zeros."
+    "text": "Our reference variable for the health category is Average and Male for the gender category.\n\n\n     n     mean      var    p_zero max\n1 4406 5.774399 45.68712 0.1550159  89\n\n\n\n\n\n\n\n\n\n\n\nUpon initially analyzing the data, it can be observed that it is count data; all values are whole numbers being 0 or higher, and it presents a positive, right skew. The variance is 45.69 is about 7.91 times the mean 5.77. This data is very overdispersed and there’s more spread than Poisson would assume, as Poisson assumes the variance is equal to the mean. In order to understand the count, we can see that 16% have never visited the doctor. We would need to see if the model truly has this amount of zeros."
   },
   {
     "objectID": "index.html#looking-at-variables",
     "href": "index.html#looking-at-variables",
-    "title": "Count Regression: Workflow",
+    "title": "Exploring Count Regression",
     "section": "",
-    "text": "Our reference variable for the health category is Average and Male for the gender category.\n\n\n     n     mean      var    p_zero max\n1 4406 5.774399 45.68712 0.1550159  89\n\n\n\n\n\n\n\n\n\n\n\nUpon initially analyzing the data, it can be observed that it is count data; all values are whole numbers being 0 or higher, and it presents a positive, right skew. The variance is 45.69) is about 7.91 times the mean (5.77. This data is very overdispersed and there’s more spread than Poisson would assume, as Poisson assumes the variance is equal to the mean. In order to understand the count, we can see that 16% have never visited the doctor. We would need to see if the model truly has this amount of zeros."
+    "text": "Our reference variable for the health category is Average and Male for the gender category.\n\n\n     n     mean      var    p_zero max\n1 4406 5.774399 45.68712 0.1550159  89\n\n\n\n\n\n\n\n\n\n\n\nUpon initially analyzing the data, it can be observed that it is count data; all values are whole numbers being 0 or higher, and it presents a positive, right skew. The variance is 45.69 is about 7.91 times the mean 5.77. This data is very overdispersed and there’s more spread than Poisson would assume, as Poisson assumes the variance is equal to the mean. In order to understand the count, we can see that 16% have never visited the doctor. We would need to see if the model truly has this amount of zeros."
   },
   {
     "objectID": "index.html#why-not-a-linear-model",
     "href": "index.html#why-not-a-linear-model",
-    "title": "Count Regression: Workflow",
+    "title": "Exploring Count Regression",
     "section": "2.1 Why not a linear model?",
     "text": "2.1 Why not a linear model?\n\n\n\n\n\n\n\n\n\nThe function, DHARMa approximates new, predicted data from the fitted models and determining where the observed data is. If it was fitting the Gaussian model well, there would be uniform residuals along the QQ plot, however the shape notes that there is a cluster of low values near 0 and a cluster of higher values near 1. This linear model is not accurate predictive or representative of our count data. Deeper issues also lie, as Gaussian models can have negative counts with no bounds, however doctors visits in our data can’t be less than 0. It assumes a constant variance, however the variance grows with the mean, and Poisson predicts it is the same. Finally, it treats the effects as additive, however it’s more typical to multiply the count."
   },
   {
     "objectID": "index.html#specifying-nested-poisson-models",
     "href": "index.html#specifying-nested-poisson-models",
-    "title": "Count Regression: Workflow",
+    "title": "Exploring Count Regression",
     "section": "2.2 Specifying Nested Poisson Models",
     "text": "2.2 Specifying Nested Poisson Models\nWe are going to specify 3 nested models here. This means that there is an intercept model with only the outcome variable, and in each model, predictors are added.\n\n\n\n\n\n\n\n\nModel\nFormula\nResearch rationale\n\n\n\n\nnull: Null\nvisits ~ 1\nBaseline model\n\n\none_predictor: Chronic\nvisits ~ chronic\nEvaluate number of chronic conditions\n\n\nFull Poisson: Full\nvisits ~ chronic + health + gender + school + insurance\nThe remaining predictors being conditions, health status, gender, education, and insurance explain additional variation"
   },
   {
     "objectID": "index.html#exploring-and-comparing-fitted-models",
     "href": "index.html#exploring-and-comparing-fitted-models",
-    "title": "Count Regression: Workflow",
+    "title": "Exploring Count Regression",
     "section": "2.2 Exploring and Comparing Fitted Models",
-    "text": "2.2 Exploring and Comparing Fitted Models\nDue to our models being nested, we can compare them all using an anova.\n\n5.2 Model Performance\n\n\n2.3 Combining Nested Test & Model Performance\n\n\n2.4 Displaying the Combined Table\n\n\n\n\n\n\n\n\nModel\nAIC\nBIC\nLog-likelihood\nDeviance\nResidual.df\nNested df\nNested χ²\nNested p\n\n\n\n\nNull\n39,720.340\n39,726.731\n−19,859.170\n26,942.921\n4405\n—\n—\n—\n\n\nOne_Predictor: Chronic\n37,546.913\n37,559.694\n−18,771.456\n24,767.493\n4404\n1\n2,175.428\n&lt; .001\n\n\nFull\n36,596.989\n36,641.724\n−18,291.494\n23,807.569\n4399\n5\n959.924\n&lt; .001\n\n\n\n\n\n\n\n\n\n2.5 Interpreting the combined table\nThe provisionally selected model is Full, and the AIC value is 3.6596989^{4}, and the BIC value is 3.6641724^{4}."
+    "text": "2.2 Exploring and Comparing Fitted Models\nDue to our models being nested, we can compare them all using an anova.\n\nModel Performance"
+  },
+  {
+    "objectID": "index.html#combining-nested-test-model-performance",
+    "href": "index.html#combining-nested-test-model-performance",
+    "title": "Exploring Count Regression",
+    "section": "2.3 Combining Nested Test & Model Performance",
+    "text": "2.3 Combining Nested Test & Model Performance"
+  },
+  {
+    "objectID": "index.html#displaying-the-combined-table",
+    "href": "index.html#displaying-the-combined-table",
+    "title": "Exploring Count Regression",
+    "section": "2.4 Displaying the Combined Table",
+    "text": "2.4 Displaying the Combined Table\n\n\n\n\n\n\n\n\nModel\nAIC\nBIC\nLog-likelihood\nDeviance\nResidual.df\nNested df\nNested χ²\nNested p\n\n\n\n\nNull\n39,720.340\n39,726.731\n−19,859.170\n26,942.921\n4405\n—\n—\n—\n\n\nOne_Predictor: Chronic\n37,546.913\n37,559.694\n−18,771.456\n24,767.493\n4404\n1\n2,175.428\n&lt; .001\n\n\nFull\n36,596.989\n36,641.724\n−18,291.494\n23,807.569\n4399\n5\n959.924\n&lt; .001"
+  },
+  {
+    "objectID": "index.html#interpreting-the-combined-table",
+    "href": "index.html#interpreting-the-combined-table",
+    "title": "Exploring Count Regression",
+    "section": "2.5 Interpreting the combined table",
+    "text": "2.5 Interpreting the combined table\nThe χ² value when looking between the null and a single predictor is 2175.43, with 1 df, and the p-value of &lt; 0.001. When comparing the one predictor model to the full model, the χ² is 959.92, the df is 5, and the p-value is &lt; 0.001.\nThe χ² statistic is the likelihood ratio, where the deviation will decrease with increased complexity as there are more factors as they account for more. The df accounts for how many parameters are being added, with the total number of variables being one more than the degrees of freedom. Finally, the p-value is the likelihood that that this is truly improvement if the simpler model were as good. We are going to be using he likelihood ratio value as a decision factor for the selected model, and the χ² value is 959.92 (p &lt; 0.001), indicating significant improvement in fit. Therefore, our selected model is the Full Poisson model.\nThe provisionally selected model is Full, and the AIC value is 3.6596989^{4}, and the BIC value is 3.6641724^{4}."
   },
   {
     "objectID": "index.html#simulating-residuals",
     "href": "index.html#simulating-residuals",
-    "title": "Count Regression: Workflow",
+    "title": "Exploring Count Regression",
     "section": "3.1 Simulating Residuals",
     "text": "3.1 Simulating Residuals"
   },
   {
     "objectID": "index.html#testing-for-overdispersion-excess-zeros",
     "href": "index.html#testing-for-overdispersion-excess-zeros",
-    "title": "Count Regression: Workflow",
+    "title": "Exploring Count Regression",
     "section": "3.2 Testing for Overdispersion & Excess Zeros",
     "text": "3.2 Testing for Overdispersion & Excess Zeros\nThis test will assess whether the observed variance is larger or smaller than our Poisson model would expect, and if there are more zeros than expected.\n\n\n\n\n\n\n\n\n\n\n    DHARMa nonparametric dispersion test via sd of residuals fitted vs.\n    simulated\n\ndata:  simulationOutput\ndispersion = 7.2521, p-value &lt; 2.2e-16\nalternative hypothesis: two.sided\n\n\n\n\n\n\n\n\n\n\n\n\n    DHARMa zero-inflation test via comparison to expected zeros with\n    simulation under H0 = fitted model\n\ndata:  simulationOutput\nratioObsSim = 15.035, p-value &lt; 2.2e-16\nalternative hypothesis: two.sided"
   },
   {
     "objectID": "index.html#interpreting-the-diagnostics",
     "href": "index.html#interpreting-the-diagnostics",
-    "title": "Count Regression: Workflow",
+    "title": "Exploring Count Regression",
     "section": "3.3 Interpreting the Diagnostics",
-    "text": "3.3 Interpreting the Diagnostics\nThe DHARMa plots suggest that the fit of the Poisson model is less than ideal. It can be seen that in both graphs, the values on the far left being the simulated values from the model are vastly different from the red line, being the actual values.\nThe dispersion ratio the plot has displayed is 7.25 (p &lt; .001), and the expected rate of zero is 15.03 times the amount of zeros that the Poisson model expects, meaning that there is a greater variance in our data than the Poisson model can account for.\nThis overdispersion is important, as it carries the assumption that the variance is equal to the mean, so when this metric is incorrect, the other values that take into account the variance/mean, such as the standard errors, confidence intervals, and p-values, they are incorrect assumptions and will decrease each of these values. We cannot, however move straight to a zero-inflated model after these results, as zeros can be generated from two processes: structural (individuals never visiting the physician office), or sampling (count process, where it’s sometimes zero)."
+    "text": "3.3 Interpreting the Diagnostics\nThe DHARMa plots suggest that the fit of the Poisson model is less than ideal. It can be seen that in both graphs, the values on the far left being the simulated values from the model are vastly different from the red line, being the actual values.\nThe dispersion ratio the plot has displayed is 7.25 (p &lt; .001), and the expected rate of zero is 15.03 times the amount of zeros that the Poisson model expects, meaning that there is a greater variance in our data than the Poisson model can account for.\nThis overdispersion is important, as it carries the assumption that the variance is equal to the mean. Therefore, when this metric is incorrect, the other values that take into account the variance/mean, such as the standard errors, confidence intervals, and p-values, are also incorrect and likely decreased. We cannot, however move straight to a zero-inflated model after these results, as zeros can be generated from two processes: structural (individuals never visiting the physician office), or sampling (count process, where it’s sometimes zero)."
   },
   {
     "objectID": "index.html#estimate-the-nb2-model",
     "href": "index.html#estimate-the-nb2-model",
-    "title": "Count Regression: Workflow",
+    "title": "Exploring Count Regression",
     "section": "4.1 Estimate the NB2 Model",
     "text": "4.1 Estimate the NB2 Model\n\n\n Family: nbinom2  ( log )\nFormula:          visits ~ chronic + health + gender + school + insurance\nData: data\n\n      AIC       BIC    logLik -2*log(L)  df.resid \n  24469.9   24521.0  -12227.0   24453.9      4398 \n\n\nDispersion parameter for nbinom2 family (): 1.16 \n\nConditional model:\n                 Estimate Std. Error z value Pr(&gt;|z|)    \n(Intercept)      0.825180   0.058565  14.090  &lt; 2e-16 ***\nchronic          0.195759   0.012475  15.692  &lt; 2e-16 ***\nhealthpoor       0.367664   0.048204   7.627 2.40e-14 ***\nhealthexcellent -0.373645   0.061542  -6.071 1.27e-09 ***\ngenderfemale     0.115129   0.031658   3.637 0.000276 ***\nschool           0.027179   0.004402   6.174 6.67e-10 ***\ninsuranceyes     0.250155   0.040430   6.187 6.12e-10 ***\n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1"
   },
   {
     "objectID": "index.html#compare-the-poisson-and-nb2",
     "href": "index.html#compare-the-poisson-and-nb2",
-    "title": "Count Regression: Workflow",
+    "title": "Exploring Count Regression",
     "section": "4.2 Compare the Poisson and NB2",
-    "text": "4.2 Compare the Poisson and NB2\n\n\nData: data\nModels:\npoisson: visits ~ chronic + health + gender + school + insurance, zi=~0, disp=~1\nneg_binom: visits ~ chronic + health + gender + school + insurance, zi=~0, disp=~1\n          Df   AIC   BIC logLik deviance Chisq Chi Df Pr(&gt;Chisq)    \npoisson    7 36597 36642 -18292    36583                            \nneg_binom  8 24470 24521 -12227    24454 12129      1  &lt; 2.2e-16 ***\n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\n\nDOUBLE CHECK VALUES AFTER RENDERING! Using a Likelihood Ratio Test to compare the Poisson model versus the negative binomial model, the χ² was found to be (1) = 1.212908^{4}, p &lt; .001. These values show that the addition of another parameter (through the df value), as seen in the large Chisq value, showing that the model fits better the the added parameter. Additionally, both the AIC and BIC (Code values) were significantly lowered. Through these values, we can conclude that the NB2 model is a better fit. This added parameter was valuable in allowing the variance to exceed the mean, however these values cannot yet illustrate other problems such as extreme counts and excess zeros."
+    "text": "4.2 Compare the Poisson and NB2\n\n\nData: data\nModels:\npoisson: visits ~ chronic + health + gender + school + insurance, zi=~0, disp=~1\nneg_binom: visits ~ chronic + health + gender + school + insurance, zi=~0, disp=~1\n          Df   AIC   BIC logLik deviance Chisq Chi Df Pr(&gt;Chisq)    \npoisson    7 36597 36642 -18292    36583                            \nneg_binom  8 24470 24521 -12227    24454 12129      1  &lt; 2.2e-16 ***\n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\n\nUsing a Likelihood Ratio Test to compare the Poisson model versus the negative binomial model, the χ² was found to be (1) = 1.212908^{4}, p &lt; .001. These values show that the addition of another parameter (through the df value), as seen in the large Chisq value, showing that the model fits better the the added parameter. Additionally, both the AIC and BIC (3.6597^{4} to 2.447^{4}, 3.6642^{4} to 2.4521^{4} respectively) were significantly lowered. Through these values, we can conclude that the NB2 model is a better fit. This added parameter was valuable in allowing the variance to exceed the mean, however these values cannot yet illustrate other problems such as extreme counts and excess zeros."
   },
   {
     "objectID": "index.html#double-checking-nb2-with-dharma",
     "href": "index.html#double-checking-nb2-with-dharma",
-    "title": "Count Regression: Workflow",
+    "title": "Exploring Count Regression",
     "section": "4.3 Double-Checking NB2 with DHARMa",
-    "text": "4.3 Double-Checking NB2 with DHARMa\n\n\n\n\n\n\n\n\n\nWe would like to perform additional tests regarding the dispersion, as it becomes close to zero it indicates non-significance. We would also like to observe whether the model has produced a number of zeros similar to the observed, determining whether a hurdle or zero-inflated model might be needed.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nThe negative binomial model has resolved overdispersion, as the ratio is now 1.04 (p = 0.432), and non-significant.\n\nVisualizing Predicted Counts\nCoefficients on the log scale are hard to picture, so it helps to plot what the model predicts on the count scale. Here we plot predicted article counts across mentor productivity, holding the other predictors at their reference levels (Men, Single) or means (kid5, phd).\n\n\n\n\n\n\n\n\n\nThis model has created a curved line upwards, despite the predictors being linear, due to the use of a log link, as each year of school added isn’t 1, but rather the log of it, multiplying the expected count.\nIn double checking these plots, the QQ plots should (and are) closer to the diagonal line, in which they are, showing the NB2 is adequate with residuals being closer to predicted. However, the DHARMa residual vs predicted illustrates that there is a curve rather than the expected flat, fitted line. This curvature looks to have a pattern, meaning that the residuals likely are not random (as they should be, which would create the ideal straight line); this illustrated systemic changes, which are not desirable in a model, and they do not match the horizontal, red quantile lines."
+    "text": "4.3 Double-Checking NB2 with DHARMa\n\n\n\n\n\n\n\n\n\nWe would like to perform additional tests regarding the dispersion, as it becomes close to zero it indicates non-significance. We would also like to observe whether the model has produced a number of zeros similar to the observed, determining whether a hurdle or zero-inflated model might be needed.\nIn double checking these plots, the QQ plots should (and are) closer to the diagonal line, in which they are, showing the NB2 is adequate with residuals being closer to predicted. However, the DHARMa residual vs predicted illustrates that there is a curve rather than the expected flat, fitted line. This curvature looks to have a pattern, meaning that the residuals likely are not random (as they should be, which would create the ideal straight line); this illustrated systemic changes, which are not desirable in a model, and they do not match the horizontal, red quantile lines.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nThe negative binomial model has resolved overdispersion, as the ratio is now 1.04 (p = 0.432), and non-significant.\n\nVisualizing Predicted Counts\nCoefficients on the log scale are hard to picture, so it helps to plot what the model predicts on the count scale. Here we plot predicted article counts across mentor productivity, holding the other predictors at their reference levels (Men, Average) or means.\n\n\n\n\n\n\n\n\n\nThis model has created a curved line upwards, despite the predictors being linear, due to the use of a log link, as each year of school added isn’t 1, but rather the log of it, multiplying the expected count."
+  },
+  {
+    "objectID": "index.html#prediction",
+    "href": "index.html#prediction",
+    "title": "Exploring Count Regression",
+    "section": "6.1 Prediction",
+    "text": "6.1 Prediction\nWe predict that gender (male versus female) will moderate the direction of correlation such that females will create a more positive association than that of men. This means that there is a stronger positive correlation between the number of chronic conditions and the subsequent physician visits compared to that of men, who are predicted to have less of a positive correlation, if even negative."
+  },
+  {
+    "objectID": "index.html#fitting-the-interaction-model",
+    "href": "index.html#fitting-the-interaction-model",
+    "title": "Exploring Count Regression",
+    "section": "6.2 Fitting the Interaction Model",
+    "text": "6.2 Fitting the Interaction Model\n\n\n Family: nbinom2  ( log )\nFormula:          visits ~ health + school + insurance + chronic * gender\nData: data\n\n      AIC       BIC    logLik -2*log(L)  df.resid \n  24471.9   24529.4  -12226.9   24453.9      4397 \n\n\nDispersion parameter for nbinom2 family (): 1.16 \n\nConditional model:\n                      Estimate Std. Error z value Pr(&gt;|z|)    \n(Intercept)           0.827166   0.062170  13.305  &lt; 2e-16 ***\nhealthpoor            0.367655   0.048204   7.627 2.40e-14 ***\nhealthexcellent      -0.373779   0.061557  -6.072 1.26e-09 ***\nschool                0.027184   0.004403   6.174 6.64e-10 ***\ninsuranceyes          0.250309   0.040462   6.186 6.16e-10 ***\nchronic               0.194411   0.018857  10.310  &lt; 2e-16 ***\ngenderfemale          0.111451   0.049905   2.233   0.0255 *  \nchronic:genderfemale  0.002303   0.024147   0.095   0.9240    \n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1"
+  },
+  {
+    "objectID": "index.html#test-whether-the-interaction-is-needed",
+    "href": "index.html#test-whether-the-interaction-is-needed",
+    "title": "Exploring Count Regression",
+    "section": "6.3 Test whether the interaction is needed",
+    "text": "6.3 Test whether the interaction is needed\nWe will be testing whether the interaction with gender improves the fit over the model\n\n\nData: data\nModels:\nneg_binom: visits ~ chronic + health + gender + school + insurance, zi=~0, disp=~1\ninteract: visits ~ health + school + insurance + chronic * gender, zi=~0, disp=~1\n          Df   AIC   BIC logLik deviance  Chisq Chi Df Pr(&gt;Chisq)\nneg_binom  8 24470 24521 -12227    24454                         \ninteract   9 24472 24529 -12227    24454 0.0091      1     0.9241\n\n\nThis omnibus test reveals potential interactions between the variable of chronic conditions and gender. The χ² was 0.01, the df was 1 and the p-value was 0.92407. Adding the interaction showed very little benefit, if even a reduced predictive ability. The next few tests will show the possibilities of what probing might add."
+  },
+  {
+    "objectID": "index.html#plot-predicted-counts",
+    "href": "index.html#plot-predicted-counts",
+    "title": "Exploring Count Regression",
+    "section": "6.4 Plot Predicted Counts",
+    "text": "6.4 Plot Predicted Counts"
+  },
+  {
+    "objectID": "index.html#probe-the-interaction",
+    "href": "index.html#probe-the-interaction",
+    "title": "Exploring Count Regression",
+    "section": "6.5 Probe the Interaction",
+    "text": "6.5 Probe the Interaction\nHere we will find the slopes of the number of chronic conditions with gender and compare it against 0.\n\nSimple Slopes\n\n\n gender chronic.trend     SE  df asymp.LCL asymp.UCL\n male           0.194 0.0189 Inf     0.157     0.231\n female         0.197 0.0160 Inf     0.165     0.228\n\nResults are averaged over the levels of: health, insurance \nConfidence level used: 0.95 \n\n\n\n\nSlope Comparison\n\n\n contrast      estimate     SE  df z.ratio p.value\n male - female  -0.0023 0.0241 Inf  -0.095  0.9240\n\nResults are averaged over the levels of: health, insurance \n\n\n\n\nSimple Slopes Tested Against Zero\n\n\n gender chronic.trend     SE  df asymp.LCL asymp.UCL z.ratio p.value\n male           0.194 0.0189 Inf     0.157     0.231  10.310 &lt;0.0001\n female         0.197 0.0160 Inf     0.165     0.228  12.300 &lt;0.0001\n\nResults are averaged over the levels of: health, insurance \nConfidence level used: 0.95 \n\n\nThe pairs(slopes) tests the interaction, but the sign flipped by changing the order of categories. The slopes do not differ, but the signs change.\n\n\nSimple Effects\nNow flip it: the gender gap at low amounts of chronic conditions (−1 SD), average, and high (+1 SD) amounts of chronic conditions. We look at the gender difference at different chronic condition values, rather than the chronic conditions within each gender.\n\n\nchronic = 0.192:\n gender response    SE  df asymp.LCL asymp.UCL\n male       3.55 0.150 Inf      3.27      3.86\n female     3.97 0.150 Inf      3.69      4.28\n\nchronic = 1.542:\n gender response    SE  df asymp.LCL asymp.UCL\n male       4.62 0.152 Inf      4.33      4.93\n female     5.18 0.154 Inf      4.89      5.49\n\nchronic = 2.892:\n gender response    SE  df asymp.LCL asymp.UCL\n male       6.00 0.246 Inf      5.54      6.51\n female     6.76 0.240 Inf      6.30      7.24\n\nResults are averaged over the levels of: health, insurance \nConfidence level used: 0.95 \nIntervals are back-transformed from the log scale \n\n\nchronic = 0.192:\n contrast      estimate     SE  df z.ratio p.value\n male - female   -0.112 0.0464 Inf  -2.411  0.0159\n\nchronic = 1.542:\n contrast      estimate     SE  df z.ratio p.value\n male - female   -0.115 0.0317 Inf  -3.629  0.0003\n\nchronic = 2.892:\n contrast      estimate     SE  df z.ratio p.value\n male - female   -0.118 0.0445 Inf  -2.655  0.0079\n\nResults are averaged over the levels of: health, insurance \nResults are given on the log (not the response) scale. \n\n\nSimple Slopes It can be seen that the slope different from the pairs() function being the differences betwen the male-female simple slopes, creating the interaction coefficient. However, when males are the reference group, it is female-male so that the estimate, standard error and p-value match, but the sign flips; they are both on the log scale. The sign is different simply because of flipped ordering of male and female in the different computations. Even though there are only two levels, there is only the comparison of two groups in the moderator, being male vs female, creating the interaction coefficient. Simple Effects The emmeans() counts differ, as they averages the predictors at the mean. However, ggeffect() hold these constant fixing them at a reference value (meaning, gender being male and health being average). We also used +/-1SD which is a decimal value, ggplot() uses whole numbers. The contrasts, being the male-female differences do not differ as it only depends on the gender coefficients (the two values of the moderator) not on other predictor values."
+  },
+  {
+    "objectID": "index.html#report-the-simple-effects-in-a-table",
+    "href": "index.html#report-the-simple-effects-in-a-table",
+    "title": "Exploring Count Regression",
+    "section": "6.6 Report the simple effects in a table",
+    "text": "6.6 Report the simple effects in a table\n\n\n\n\n\n\n\n\nSimple Effects of Gender Across Number of Chronic Conditions\n\n\nNegative-binomial regression (log link)\n\n\nChronic Conditions\nContrast\nLog Contrast\nSE\nz\np\n\n\n\n\n-1 SD\nmale - female\n−0.112\n0.046\n−2.411\n0.016\n\n\nMean\nmale - female\n−0.115\n0.032\n−3.629\n&lt;0.001\n\n\n+1 SD\nmale - female\n−0.118\n0.044\n−2.655\n0.008\n\n\n\nLog contrasts = Men − Women. z-tests and p-values are computed on the log scale."
+  },
+  {
+    "objectID": "index.html#interpret-the-interaction",
+    "href": "index.html#interpret-the-interaction",
+    "title": "Exploring Count Regression",
+    "section": "6.7 Interpret the Interaction",
+    "text": "6.7 Interpret the Interaction\nChronic Condition Association Differing by Gender? Throughout the tests performed, the LRT found was extremely small(χ²(1) = 0.01, p = 0.924), and upon adding the interaction, showing that adding the interaction did not increase predictive ability/fit. Furthermore, when incorporating AIC & BIC, the fit was worse (AIC = 2.44719^{4} vs. 2.44699^{4} without the interaction; BIC = 2.45294^{4} vs. 2.4521^{4}). Furthermore, in assessing the log contrasts between males and females, they are so similar that differences between them and interaction with chronic conditions cannot be deduced, and there are no differences in slopes. Generally, men have lower numbers of visits as a whole, whoever this is simply a gender difference, rather than reflective of the impact of less chronic conditions.\nConfidence in the Interaction Using the omnibus results and probing tests, some data was revealed, however it did not necessarily increase the confidence in the interaction, as our data reflects a lack of interaction between chronic condition and gender. Using various tests, such as information criteria, the omnibus test as well as additional probing have not been reflective of moderated effects. While there are gender differences present, none of the tests have provided adequate values to assume anything beyond purely gender differences, for example, the gap with omnibus test are fairly constant and parallel, rather than intersection."
+  },
+  {
+    "objectID": "index.html#discussion",
+    "href": "index.html#discussion",
+    "title": "Exploring Count Regression",
+    "section": "7.2 Discussion",
+    "text": "7.2 Discussion\nMy results suggest that chronic conditions are seemingly have the strongest predictive abilities within the predictors. Realistically, this would be sensible, as those who have chronic conditions are likely seeking regular care measures and check-ins to ensure that their status hasn’t worsened they are not in pain, or that they are receiving a regimented treatment plan (Queenan et al., 2021). Self-perceived health is additionally important, as it will determine the frequency of visits in a purely subjective manner. That is one limitation of the study, is that ‘self-perceived health’ is a valuable measure, however it is more subjective and may be easily confounded by factors such as anxiety or hypochondriac symptomatology (Mobley et al., 2019). Those perceived in excellent health have less visits than those in poorer health, however the active choice to potentially ignore symptoms and self-identify as “healthy” may create a slight inaccuracy in the data. However, this metric is second most important in understanding what leads to physician office visits. Other variables such as insurance and education are slightly lower, and seemingly have less of an effect on visits, potentially as they do not directly relate to the health of an individual. Private insurance creates some effect, though, due to prevalent concerns and remains a barrier to treatment. Another limitation of this study could be the healthcare system in the region(s) that the study was performed. For instance, Ontario has the Ontario Health Insurance Plan, where regardless if they have private insurance, there are some treatments that would not require payments regardless, compared to the USA, where this is not the case (Ross University School of Medicine [RUSM], 2021). Gender was found to be generally insignificant, and other “life”-related factors seemingly took precedence - health issues can happen to anyone. The obvious limitations, other than the ones that were listed were additionally self-report measures which may additionally be skewed due to the subjective nature of surveys. With healthcare especially, there are additional barriers to consider such as: distance, accessibility, time, cost, limited appointment availability, etc (Canadian Institute for Health Information [CIHI], 2024).\nReferences Canadian Institute for Health Information. (2024, December 5). Access to primary care: Many Canadians face challenges. https://www.cihi.ca/en/primary-and-virtual-care-access-emergency-department-visits-for-primary-care-conditions/access-to-primary-care-many-canadians-face-challenges\nMobley, D., Baum, N. H., Beattie, A., & Nemeroff, C. (2019). When Imagination Becomes a Disease: Dealing With Hypochondriacal Patients in Clinical Practice. Ochsner journal, 19(2), 70–73. https://doi.org/10.31486/toj.18.0123\nQueenan, J. A., Wong, S. T., Barber, D., Morkem, R., & Salman, A. (2021). The prevalence of common chronic conditions seen in Canadian primary care: Results from the Canadian Primary Care Sentinel Surveillance Network. Canadian Primary Care Sentinel Surveillance Network. https://cpcssn.ca/wp-content/uploads/2021/05/cpcssn-chronic-conditions-report-2021.pdf\nRoss University School of Medicine. (2021, May 11). US vs. Canadian healthcare: What is the difference? https://medical.rossu.edu/about/blog/us-vs-canadian-healthcare"
   }
 ]
