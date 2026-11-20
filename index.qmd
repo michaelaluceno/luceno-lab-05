@@ -50,6 +50,24 @@ data <- data |>
     health = fct_relevel(factor(health), "average"),
     gender = fct_relevel(factor(gender), "male")
   )
+
+
+# DHARMa plot with the test results moved to the top-left corner,
+# so they don't overlap the QQ line
+dharma_plot <- function(res) {
+  unif <- testUniformity(res, plot = FALSE)
+  disp <- testDispersion(res, plot = FALSE)
+  out  <- testOutliers(res, plot = FALSE)
+  p    <- c(unif$p.value, disp$p.value, out$p.value)
+  labs <- paste0(c("KS", "Dispersion", "Outliers"), ": p ",
+                 ifelse(p < .001, "< .001", paste("=", sub("^0", "", sprintf("%.3f", p)))))
+
+  par(mfrow = c(1, 2))
+  plotQQunif(res, testUniformity = FALSE, testOutliers = FALSE, testDispersion = FALSE)
+  legend("topleft", legend = labs, text.col = ifelse(p < .05, "red", "black"),
+         bty = "n", cex = 0.8, inset = c(-0.02, 0))
+  plotResiduals(res)
+}
 ```
 
 ## 1.2 Looking at Variables
@@ -124,7 +142,7 @@ m_gauss <- glmmTMB(
 #simulation 
 set.seed(9041)
 res_gauss <- simulateResiduals(m_gauss, n = 500, plot = FALSE)
-plot(res_gauss)
+dharma_plot(res_gauss)
 ```
 
 The function, DHARMa approximates new, predicted data from the fitted models and determining where the observed data is. If it was fitting the Gaussian model well, there would be uniform residuals along the QQ plot, however the shape notes that there is a cluster of low values near 0 and a cluster of higher values near 1. This linear model is not accurate predictive or representative of our count data. Deeper issues also lie, as Gaussian models can have negative counts with no bounds, however doctors visits in our data can't be less than 0. It assumes a constant variance, however the variance grows with the mean, and Poisson predicts it is the same. Finally, it treats the effects as additive, however it's more typical to multiply the count.
@@ -317,7 +335,7 @@ set.seed(9041)
 #Simulate residuals using poisson
 res_pois <- simulateResiduals(poisson, n = 500, plot = FALSE)
 
-plot(res_pois)
+dharma_plot(res_pois)
 
 ```
 
@@ -380,7 +398,7 @@ Using a Likelihood Ratio Test to compare the Poisson model versus the negative b
 #We use the same seed to be reproducible and comaprable to Poisson check. 
 set.seed(9041)
 res_nb <- simulateResiduals(neg_binom, n = 500, plot = FALSE)
-plot(res_nb)
+dharma_plot(res_nb)
 ```
 
 We would like to perform additional tests regarding the dispersion, as it becomes close to zero it indicates non-significance. We would also like to observe whether the model has produced a number of zeros similar to the observed, determining whether a hurdle or zero-inflated model might be needed.
